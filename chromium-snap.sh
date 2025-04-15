@@ -36,6 +36,13 @@ _create_chromium_appimage() {
 	mv ./squashfs-root/bin/*"$APP"*.desktop ./"$APP".AppDir/
 	sed -i 's#/chromium.png#chromium#g' ./"$APP".AppDir/*.desktop
 
+	# 重命名二进制文件
+	mv ./"$APP".AppDir/usr/lib/chromium*/chrome ./"$APP".AppDir/usr/lib/chromium*/test
+
+	# 更新 .desktop 文件
+	sed -i 's/Exec=chromium/Exec=test/g' ./"$APP".AppDir/*.desktop
+
+	# 生成 AppRun
 	cat <<-'HEREDOC' >> ./"$APP".AppDir/AppRun
 	#!/bin/sh
 	HERE="$(dirname "$(readlink -f "${0}")")"
@@ -45,7 +52,7 @@ _create_chromium_appimage() {
 	export PYTHONPATH="${HERE}"/usr/share/pyshared/:"${HERE}"/usr/lib/python*/:"${PYTHONPATH}"
 	export PYTHONHOME="${HERE}"/usr/:"${HERE}"/usr/lib/python*/
 	export XDG_DATA_DIRS="${HERE}"/usr/share/:"${XDG_DATA_DIRS}"
-	exec ${HERE}/usr/lib/chromium*/chrome "$@"
+	exec ${HERE}/usr/lib/chromium*/test "$@"
 	HEREDOC
 	chmod a+x ./"$APP".AppDir/AppRun
 
