@@ -14,17 +14,18 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: build
-      if: always()
+    - name: Install dependencies
       run: |
-        sudo apt update && sudo apt install desktop-file-utils
+        sudo apt update
+        sudo apt install -y desktop-file-utils squashfs-tools
+
+    - name: Build
+      run: |
         chmod a+x ./chromium-snap.sh
         ./chromium-snap.sh
         mkdir -p dist
-        # 调试：列出生成的文件
         echo "Listing generated files:"
         ls -l *.AppImage* || echo "No AppImage files found"
-        # 移动 AppImage 文件
         mv *.AppImage* dist/ || { echo "Error: Failed to move AppImage files"; exit 1; }
 
     - name: Verify AppImage
