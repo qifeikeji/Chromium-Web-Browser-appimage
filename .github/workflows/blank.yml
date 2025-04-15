@@ -1,4 +1,4 @@
-name: Release Chromium Appimage
+name: Release Chromium AppImage
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
@@ -20,32 +20,42 @@ jobs:
         sudo apt update && sudo apt install desktop-file-utils
         chmod a+x ./chromium-snap.sh
         ./chromium-snap.sh
-        mkdir dist
-        mv *AppImage* dist/
+        mkdir -p dist
+        # 调试：列出生成的文件
+        echo "Listing generated files:"
+        ls -l *.AppImage* || echo "No AppImage files found"
+        # 移动 AppImage 文件
+        mv *.AppImage* dist/ || { echo "Error: Failed to move AppImage files"; exit 1; }
+
+    - name: Verify AppImage
+      run: |
+        echo "Listing dist directory:"
+        ls -l dist/*.AppImage || { echo "Error: No AppImage files in dist/"; exit 1; }
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4.4.0
       with:
         name: Chromium-Web-Browser-x86_64.AppImage
         path: 'dist'
-        
+
+    - name: Clean up
+      run: rm -rf tmp
+
   release:
-      needs: [build]
-      permissions: write-all
-      runs-on: ubuntu-latest
-
-      steps:
-        - uses: actions/download-artifact@v4.1.8
-          with:
-            name: Chromium-Web-Browser-x86_64.AppImage
-
-        - name: release
-          uses: marvinpinto/action-automatic-releases@latest
-          with:
-            title: Continuous build
-            automatic_release_tag: continuous
-            prerelease: false
-            draft: false
-            files: |
-              *.AppImage*
-            repo_token: ${{ secrets.GITHUB_TOKEN }}
+    needs: [build]
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v4.1.8
+      with:
+        name: Chromium-Web-Browser-x86_64.AppImage
+    - name: release
+      uses: marvinpinto/action-automatic-releases@latest
+      with:
+        title: Continuous build
+        automatic_release_tag: continuous
+        prerelease: false
+        draft: false
+        files: |
+          *.AppImage*
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
