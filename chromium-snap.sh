@@ -36,6 +36,10 @@ _create_chromium_appimage() {
     # EXTRACT THE SNAP PACKAGE AND CREATE THE APPIMAGE
     echo "Extracting snap package..."
     unsquashfs -f ./chromium.snap || { echo "Error: Failed to extract snap package"; exit 1; }
+    echo "Listing squashfs-root contents:"
+    ls -l squashfs-root || echo "Warning: squashfs-root is empty"
+    find squashfs-root -maxdepth 2 || echo "Warning: Failed to list squashfs-root"
+
     mkdir -p "$APP".AppDir
     VERSION=$(cat ./squashfs-root/snap/*.yaml | grep "^version" | head -1 | cut -c 10-)
     if [ -z "$VERSION" ]; then
@@ -45,19 +49,19 @@ _create_chromium_appimage() {
     echo "Version: $VERSION"
 
     echo "Moving files to AppDir..."
-    mv ./squashfs-root/etc ./"$APP".AppDir/ || { echo "Error: Failed to move etc"; exit 1; }
-    mv ./squashfs-root/lib ./"$APP".AppDir/ || { echo "Error: Failed to move lib"; exit 1; }
-    mv ./squashfs-root/usr ./"$APP".AppDir/ || { echo "Error: Failed to move usr"; exit 1; }
-    mv ./squashfs-root/*.png ./"$APP".AppDir/ || { echo "Error: Failed to move png"; exit 1; }
-    mv ./squashfs-root/bin/*"$APP"*.desktop ./"$APP".AppDir/ || { echo "Error: Failed to move desktop file"; exit 1; }
-    sed -i 's#/chromium.png#chromium#g' ./"$APP".AppDir/*.desktop
+    [ -d ./squashfs-root/etc ] && mv ./squashfs-root/etc ./"$APP".AppDir/ || echo "Warning: etc directory not found, skipping"
+    [ -d ./squashfs-root/lib ] && mv ./squashfs-root/lib ./"$APP".AppDir/ || echo "Warning: lib directory not found, skipping"
+    [ -d ./squashfs-root/usr ] && mv ./squashfs-root/usr ./"$APP".AppDir/ || { echo "Error: usr directory not found"; exit 1; }
+    [ -f ./squashfs-root/*.png ] && mv ./squashfs-root/*.png ./"$APP".AppDir/ || echo "Warning: png files not found, skipping"
+    [ -f ./squashfs-root/bin/*"$APP"*.desktop ] && mv ./squashfs-root/bin/*"$APP"*.desktop ./"$APP".AppDir/ || echo "Warning: desktop file not found, skipping"
+    [ -f ./"$APP".AppDir/*.desktop ] && sed -i 's#/chromium.png#chromium#g' ./"$APP".AppDir/*.desktop || echo "Warning: No desktop file to update"
 
     # 动态查找 chrome 二进制文件
     echo "Searching for chrome binary..."
-    CHROME_PATH=$(find ./"$APP".AppDir/usr/lib -type f -name chrome | head -1)
+    CHROME_PATH=$(find ./"$APP".AppDir -type f -name chrome | head -1)
     if [ -z "$CHROME_PATH" ]; then
-        echo "Error: Could not find chrome binary in usr/lib"
-        find ./"$APP".AppDir -type f -name chrome
+        echo "Error: Could not find chrome binary"
+        find ./"$APP".AppDir -type f
         exit 1
     fi
     CHROME_DIR=$(dirname "$CHROME_PATH")
@@ -67,7 +71,7 @@ _create_chromium_appimage() {
     ls -l "$CHROME_DIR/test" || echo "Warning: test binary not found after rename"
 
     # 更新 .desktop 文件
-    sed -i 's/Exec=chromium/Exec=AppRun/g' ./"$APP".AppDir/*.desktop
+    [ -f ./"$APP".AppDir/*.desktop ] && sed -i 's/Exec=chromium/Exec=AppRun/g' ./"$APP".AppDir/*.desktop || echo "Warning: No desktop file to update"
 
     # 生成 AppRun
     echo "Generating AppRun..."
