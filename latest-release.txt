@@ -1,4 +1,4 @@
 https://github.com/qifeikeji/Chromium-Web-Browser-appimage/releases/download/continuous/Chromium-beta-147.0.7727.49-x86_64.AppImage
 https://github.com/qifeikeji/Chromium-Web-Browser-appimage/releases/download/continuous/Chromium-candidate-147.0.7727.55-x86_64.AppImage
-https://github.com/qifeikeji/Chromium-Web-Browser-appimage/releases/download/continuous/Chromium-edge-148.0.7766.3-x86_64.AppImage
+https://github.com/qifeikeji/Chromium-Web-Browser-appimage/releases/download/continuous/Chromium-edge-149.0.7779.3-x86_64.AppImage
 https://github.com/qifeikeji/Chromium-Web-Browser-appimage/releases/download/continuous/Chromium-stable-147.0.7727.55-x86_64.AppImage
